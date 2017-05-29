@@ -1,0 +1,148 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/utils/debounce.html">
+<link rel="import" href="/bower_components/polymer/lib/utils/flattened-nodes-observer.html">
+
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+
+<link rel="import" href="managers/default-manager.html">
+<link rel="import" href="layouters/default-layouter.html">
+
+<dom-module id="curium-responsive-layout">
+  <template strip-whitespace>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <curium-responsive-layout-default-manager id="default-manager" layouter-map="{{layouterMap}}"></curium-responsive-layout-default-manager>
+    <curium-responsive-layout-default-layouter id="default-layouter"></curium-responsive-layout-default-layouter>
+    <div id="layout-container">
+      <slot></slot>
+    </div>
+  </template>
+
+  <script>
+    /**
+     * `curium-responsive-layout`
+     * An element designed to make building responsive layout easier
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class CuriumResponsiveLayout extends Polymer.mixinBehaviors([Polymer.IronResizableBehavior], Polymer.Element) {
+
+      static get is() { return 'curium-responsive-layout'; }
+
+      static get properties() {
+        return {
+          layoutManager: {
+            type: String, // or Object via JS
+            value: 'default',
+            observer: '_onLayoutManagerChanged'
+          },
+          resizeDelay: {
+            type: Number,
+            value: 200
+          },
+
+          // Default Manager parameter
+          layouterMap: {
+            type: Object
+          },
+
+          _layoutManagerInstance: Object,
+          _layouterInstance: Object
+        };
+      }
+
+      ready() {
+        super.ready();
+        this.addEventListener('iron-resize', e => this._onIronResize(e));
+      }
+
+      _onLayoutManagerChanged(manager) {
+        let instance = null;
+        if (manager === 'default') {
+          instance = this.$['default-manager']; //document.createElement('curium-responsive-layout-default-manager');
+        } else if (typeof manager === 'string') {
+          instance = this._getParentRoot().querySelector(manager);
+        } else if (manager !== null && typeof manager === 'object') {
+          instance = manager;
+        }
+        if (this._layoutManagerInstance !== instance) {
+          this._layoutManagerInstance = instance;
+          this.notifyManager();
+        }
+      }
+
+      _onIronResize(evt) {
+        this._resizeDebouncer = Polymer.Debouncer.debounce(this._resizeDebouncer, Polymer.Async.timeOut.after(this.resizeDelay), () => {
+          this.notifyManager();
+        });
+      }
+
+      notifyManager() {
+        let instance = null;
+        if (this._layoutManagerInstance) {
+          let layouter = this._layoutManagerInstance.onSizeChanged(this, this._getContainer(), this._getContainerWidth(), this._getContainerChildNodes());
+          if (typeof layouter === 'string') {
+            let matches = layouter.match(/^default:([\w-]+)$/);
+            if (matches !== null) {
+              instance = this.$['default-layouter'];
+              instance.layout = matches[1];
+            } else {
+              instance = this._getParentRoot().querySelector(layouter);
+            }
+          } else {
+            instance = layouter;
+          }
+        }
+
+        this._layouterInstance = instance;
+        this.notifyLayouter();
+      }
+
+      notifyLayouter() {
+        if (this._layouterInstance) {
+          this._layouterInstance.layoutContainer(this, this._getContainer(), this._getContainerWidth(), this._getContainerChildNodes());
+        }
+      }
+
+      _getParentRoot() {
+        let node = this.parent;
+        while (node.parent) {
+          node = node.parent;
+        }
+        return node;
+      }
+
+      _getContainer() {
+        return this.$['layout-container'];
+      }
+      _getContainerWidth() {
+        return this._getContainer().clientWidth;
+      }
+      _getContainerChildNodes() {
+        return Polymer.FlattenedNodesObserver.getFlattenedNodes(this._getContainer());
+      }
+
+    }
+
+    window.customElements.define(CuriumResponsiveLayout.is, CuriumResponsiveLayout);
+    {
+      window.Curium = window.Curium || {};
+
+      let currentData = null;
+      if (Curium.CuriumResponsiveLayout) currentData = Curium.CuriumResponsiveLayout;
+
+      Curium.CuriumResponsiveLayout = CuriumResponsiveLayout;
+
+      if (currentData) {
+        for (let prop in currentData) {
+          Curium.CuriumResponsiveLayout[prop] = currentData[prop];
+        }
+      }
+    }
+  </script>
+</dom-module>

@@ -1,0 +1,51 @@
+<link rel="import" href="../../polymer/polymer-element.html">
+
+<link rel="import" href="../curium-responsive-layout-manager-mixin.html">
+
+<script>
+  window.Curium = window.Curium || {};
+  Curium.CuriumResponsiveLayout = Curium.CuriumResponsiveLayout || {};
+  Curium.CuriumResponsiveLayout.Manager = Curium.CuriumResponsiveLayout.Manager || {};
+  Curium.CuriumResponsiveLayout.Manager.Default = class extends Curium.CuriumResponsiveLayout.ManagerMixin(Polymer.Element) {
+
+    static get is() { return 'curium-responsive-layout-default-manager'; }
+
+    static get properties() {
+      return {
+        layouterMap: {
+          type: Object,
+          value: () => {}
+        },
+
+        _computedLayouterMap: {
+          type: Object,
+          computed: '_computeLayouterMapChanged(layouterMap)'
+        }
+      };
+    }
+
+    _computeLayouterMapChanged(map) {
+      let computed = null;
+      if (typeof map === 'string') {
+        computed = { 0: map };
+      } else if (map !== null && typeof map === 'object') {
+        computed = {};
+        for (let prop in map) {
+          computed[prop] = map[prop];
+        }
+      }
+      return computed;
+    }
+
+    onSizeChanged(layoutHost, layoutContainer, containerWidth, childNodes) {
+      let widthList = Object.keys(this._computedLayouterMap);
+      let selected = -1;
+      for (let i = 0; i < widthList.length && containerWidth >= Number.parseInt(widthList[i]); ++i) {
+        selected = Number.parseInt(widthList[i]);
+      }
+      return selected >= 0 ? `default:${this._computedLayouterMap[selected]}` : null;
+    }
+
+  };
+  window.customElements.define(Curium.CuriumResponsiveLayout.Manager.Default.is, Curium.CuriumResponsiveLayout.Manager.Default);
+</script>

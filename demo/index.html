@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>curium-responsive-layout demo</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../curium-responsive-layout.html">
+
+    <custom-style>
+      <style is="custom-style" include="demo-pages-shared-styles">
+        .centered {
+          max-width: 1000px;
+        }
+      </style>
+    </custom-style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic curium-responsive-layout demo</h3>
+      <demo-snippet>
+        <custom-style>
+          <style>
+            #layout-0 {
+              width: 100%;
+            }
+            #comp-0 {
+              background-color: blue;
+            }
+            #comp-1 {
+              background-color: red;
+            }
+          </style>
+        </custom-style>
+        <template>
+          <curium-responsive-layout id="layout-0" layouter-map='{"0":"vertical","400":"horizontal-2"}'>
+            <div id="comp-0">Comp 0</div>
+            <div id="comp-1">Comp 1</div>
+          </curium-responsive-layout>
+        </template>
+      </demo-snippet>
+    </div>
+  </body>
+</html>

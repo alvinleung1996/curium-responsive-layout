@@ -1,0 +1,56 @@
+<link rel="import" href="../../polymer/polymer-element.html">
+
+<link rel="import" href="../curium-responsive-layout-layouter-mixin.html">
+
+<script>
+  window.Curium = window.Curium || {};
+  Curium.CuriumResponsiveLayout = Curium.CuriumResponsiveLayout || {};
+  Curium.CuriumResponsiveLayout.Layouter = Curium.CuriumResponsiveLayout.Layouter || {};
+  Curium.CuriumResponsiveLayout.Layouter.Default = class extends Curium.CuriumResponsiveLayout.LayouterMixin(Polymer.Element) {
+
+    static get is() { return 'curium-responsive-layout-default-layouter'; }
+
+    static get properties() {
+      return {
+        layout: {
+          type: String
+        }
+      };
+    }
+
+    layoutContainer(layoutHost, layoutContainer, containerWidth, childNodes) {
+      let children = childNodes.filter(e => e.nodeType === Node.ELEMENT_NODE);
+      
+      switch (this.layout) {
+
+        case 'horizontal-2':
+          this._applyStyles(layoutContainer, {
+            'display': 'flex',
+            'flex-direction': 'row',
+            'justify-content': 'center',
+            'align-items': 'stretch'
+          });
+          children.forEach(e => this._applyStyles(e, {
+            'flex': '50%'
+          }));
+          break;
+
+        case 'vertical':
+          this._applyStyles(layoutContainer, {
+            'display': 'flex',
+            'flex-direction': 'column',
+            'justify-content': 'flex-start',
+            'align-items': 'stretch'
+          });
+          children.forEach(e => this._applyStyles(e));
+          break;
+
+        default:
+          this._applyStyles(layoutContainer);
+          children.forEach(e => this._applyStyles(e));
+      }
+    }
+
+  };
+  window.customElements.define(Curium.CuriumResponsiveLayout.Layouter.Default.is, Curium.CuriumResponsiveLayout.Layouter.Default);
+</script>
