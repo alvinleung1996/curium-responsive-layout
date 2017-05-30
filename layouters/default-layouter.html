@@ -12,42 +12,42 @@
 
     static get properties() {
       return {
-        layout: {
-          type: String
+        layoutMap: {
+          type: Object,
+          value: () => {}
+        },
+
+        _computedLayoutMap: {
+          type: Object,
+          computed: '_computeLayoutMap(layoutMap)'
         }
       };
     }
 
-    layoutContainer(layoutHost, layoutContainer, containerWidth, childNodes) {
-      let children = childNodes.filter(e => e.nodeType === Node.ELEMENT_NODE);
-      
-      switch (this.layout) {
+    _computeLayoutMap(map) {
+      let computed = null;
+      if (typeof map === 'string') {
+        computed = { 0: map };
+      } else if (map !== null && typeof map === 'object') {
+        computed = {};
+        for (let prop in map) {
+          computed[prop] = map[prop];
+        }
+      }
+      return computed;
+    }
 
-        case 'horizontal-2':
-          this._applyStyles(layoutContainer, {
-            'display': 'flex',
-            'flex-direction': 'row',
-            'justify-content': 'center',
-            'align-items': 'stretch'
-          });
-          children.forEach(e => this._applyStyles(e, {
-            'flex': '50%'
-          }));
-          break;
-
-        case 'vertical':
-          this._applyStyles(layoutContainer, {
-            'display': 'flex',
-            'flex-direction': 'column',
-            'justify-content': 'flex-start',
-            'align-items': 'stretch'
-          });
-          children.forEach(e => this._applyStyles(e));
-          break;
-
-        default:
-          this._applyStyles(layoutContainer);
-          children.forEach(e => this._applyStyles(e));
+    layoutContainer(container, containerWidth, childNodes) {
+      let widthList = Object.keys(this._computedLayoutMap);
+      let selected = -1;
+      for (let i = 0; i < widthList.length && containerWidth >= Number.parseInt(widthList[i]); ++i) {
+        selected = Number.parseInt(widthList[i]);
+      }
+      let name = selected >= 0 ? this._computedLayoutMap[selected] : null;
+      if (name) {
+        container.setAttribute('layout', name);
+      } else {
+        container.removeAttribute('layout');
       }
     }
 

@@ -4,7 +4,6 @@
 
 <link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
 
-<link rel="import" href="managers/default-manager.html">
 <link rel="import" href="layouters/default-layouter.html">
 
 <dom-module id="curium-responsive-layout">
@@ -14,11 +13,11 @@
         display: block;
       }
     </style>
-    <curium-responsive-layout-default-manager id="default-manager" layouter-map="{{layouterMap}}"></curium-responsive-layout-default-manager>
-    <curium-responsive-layout-default-layouter id="default-layouter"></curium-responsive-layout-default-layouter>
-    <div id="layout-container">
-      <slot></slot>
-    </div>
+    <curium-responsive-layout-default-layouter
+      id="default-layouter"
+      layout-map="{{layoutMap}}">
+    </curium-responsive-layout-default-layouter>
+    <slot></slot>
   </template>
 
   <script>
@@ -30,28 +29,27 @@
      * @polymer
      * @demo demo/index.html
      */
-    class CuriumResponsiveLayout extends Polymer.mixinBehaviors([Polymer.IronResizableBehavior], Polymer.Element) {
+    class CuriumResponsiveLayout extends Polymer.mixinBehaviors(Polymer.IronResizableBehavior, Polymer.Element) {
 
       static get is() { return 'curium-responsive-layout'; }
 
       static get properties() {
         return {
-          layoutManager: {
+          layouter: {
             type: String, // or Object via JS
             value: 'default',
-            observer: '_onLayoutManagerChanged'
+            observer: '_onLayouterChanged'
           },
           resizeDelay: {
             type: Number,
             value: 200
           },
 
-          // Default Manager parameter
-          layouterMap: {
+          // Default Layouter parameter
+          layoutMap: {
             type: Object
           },
 
-          _layoutManagerInstance: Object,
           _layouterInstance: Object
         };
       }
@@ -61,51 +59,30 @@
         this.addEventListener('iron-resize', e => this._onIronResize(e));
       }
 
-      _onLayoutManagerChanged(manager) {
+      _onLayouterChanged(layouter) {
         let instance = null;
-        if (manager === 'default') {
-          instance = this.$['default-manager']; //document.createElement('curium-responsive-layout-default-manager');
-        } else if (typeof manager === 'string') {
-          instance = this._getParentRoot().querySelector(manager);
-        } else if (manager !== null && typeof manager === 'object') {
-          instance = manager;
+        if (layouter === 'default') {
+          instance = this.$['default-layouter'];
+        } else if (typeof layouter === 'string') {
+          instance = this._getParentRoot().querySelector(layouter);
+        } else if (layouter !== null && typeof layouter === 'object') {
+          instance = layouter;
         }
-        if (this._layoutManagerInstance !== instance) {
-          this._layoutManagerInstance = instance;
-          this.notifyManager();
+        if (this._layouterInstance !== instance) {
+          this._layouterInstance = instance;
+          this.updateLayout();
         }
       }
 
       _onIronResize(evt) {
         this._resizeDebouncer = Polymer.Debouncer.debounce(this._resizeDebouncer, Polymer.Async.timeOut.after(this.resizeDelay), () => {
-          this.notifyManager();
+          this.updateLayout();
         });
       }
 
-      notifyManager() {
-        let instance = null;
-        if (this._layoutManagerInstance) {
-          let layouter = this._layoutManagerInstance.onSizeChanged(this, this._getContainer(), this._getContainerWidth(), this._getContainerChildNodes());
-          if (typeof layouter === 'string') {
-            let matches = layouter.match(/^default:([\w-]+)$/);
-            if (matches !== null) {
-              instance = this.$['default-layouter'];
-              instance.layout = matches[1];
-            } else {
-              instance = this._getParentRoot().querySelector(layouter);
-            }
-          } else {
-            instance = layouter;
-          }
-        }
-
-        this._layouterInstance = instance;
-        this.notifyLayouter();
-      }
-
-      notifyLayouter() {
+      updateLayout() {
         if (this._layouterInstance) {
-          this._layouterInstance.layoutContainer(this, this._getContainer(), this._getContainerWidth(), this._getContainerChildNodes());
+          this._layouterInstance.layoutContainer(this._getContainer(), this._getContainerWidth(), this._getContainerChildNodes());
         }
       }
 
@@ -118,7 +95,7 @@
       }
 
       _getContainer() {
-        return this.$['layout-container'];
+        return this;
       }
       _getContainerWidth() {
         return this._getContainer().clientWidth;

@@ -24,21 +24,31 @@
     <div class="vertical-section-container centered">
       <h3>Basic curium-responsive-layout demo</h3>
       <demo-snippet>
-        <custom-style>
-          <style>
-            #layout-0 {
-              width: 100%;
-            }
-            #comp-0 {
-              background-color: blue;
-            }
-            #comp-1 {
-              background-color: red;
-            }
-          </style>
-        </custom-style>
         <template>
-          <curium-responsive-layout id="layout-0" layouter-map='{"0":"vertical","400":"horizontal-2"}'>
+          <custom-style>
+            <style>
+              #layout-0 {
+                width: 100%;
+              }
+              #layout-0[layout="horizontal-2"] {
+                display: flex;
+              }
+              #layout-0[layout="horizontal-2"] > * {
+                flex: 1 1 50%;
+              }
+              #layout-0[layout="vertical"] {
+                display: flex;
+                flex-direction: column;
+              }
+              #comp-0 {
+                background-color: blue;
+              }
+              #comp-1 {
+                background-color: red;
+              }
+            </style>
+          </custom-style>
+          <curium-responsive-layout id="layout-0" layout-map='{"0":"vertical","400":"horizontal-2"}'>
             <div id="comp-0">Comp 0</div>
             <div id="comp-1">Comp 1</div>
           </curium-responsive-layout>
