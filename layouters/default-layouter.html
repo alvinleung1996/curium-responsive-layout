@@ -44,11 +44,7 @@
         selected = Number.parseInt(widthList[i]);
       }
       let name = selected >= 0 ? this._computedLayoutMap[selected] : null;
-      if (name) {
-        container.setAttribute('layout', name);
-      } else {
-        container.removeAttribute('layout');
-      }
+      container._setLayout(name);
     }
 
   };
