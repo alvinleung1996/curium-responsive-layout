@@ -1,10 +1,7 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../polymer/lib/utils/debounce.html">
-<link rel="import" href="../polymer/lib/utils/flattened-nodes-observer.html">
 
 <link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
-
-<link rel="import" href="layouters/default-layouter.html">
 
 <dom-module id="curium-responsive-layout">
   <template strip-whitespace>
@@ -12,14 +9,7 @@
       :host {
         display: block;
       }
-      :host > #default-layouter {
-        display: none;
-      }
     </style>
-    <curium-responsive-layout-default-layouter
-      id="default-layouter"
-      layout-map="{{layoutMap}}">
-    </curium-responsive-layout-default-layouter>
     <slot></slot>
   </template>
 
@@ -38,19 +28,14 @@
 
       static get properties() {
         return {
-          layouter: {
-            type: String, // or Object via JS
-            value: 'default',
-            observer: '_onLayouterChanged'
-          },
-          resizeDelay: {
-            type: Number,
-            value: 200
-          },
-
-          // Default Layouter parameter
           layoutMap: {
-            type: Object
+            type: Object,
+            value: () => {}
+          },
+          _computedLayoutMap: {
+            type: Object,
+            computed: '_computeLayoutMap(layoutMap.*)',
+            observer: '_onComputedLayoutMapChanged'
           },
           layout: {
             type: String,
@@ -59,7 +44,10 @@
             reflectToAttribute: true
           },
 
-          _layouterInstance: Object
+          resizeDelay: {
+            type: Number,
+            value: 200
+          }
         };
       }
 
@@ -68,67 +56,50 @@
         this.addEventListener('iron-resize', e => this._onIronResize(e));
       }
 
-      _onLayouterChanged(layouter) {
-        let instance = null;
-        if (layouter === 'default') {
-          instance = this.$['default-layouter'];
-        } else if (typeof layouter === 'string') {
-          instance = this._getParentRoot().querySelector(layouter);
-        } else if (layouter !== null && typeof layouter === 'object') {
-          instance = layouter;
+      _computeLayoutMap(changeRecord) {
+        let map = changeRecord.base;
+        let computed = null;
+        if (typeof map === 'string') {
+          computed = { 0: map };
+        } else if (map !== null && typeof map === 'object') {
+          // Prevent dirty checking so the observer will always be called */
+          computed = {};
+          for (let prop in map) {
+            computed[prop] = map[prop];
+          }
         }
-        if (this._layouterInstance !== instance) {
-          this._layouterInstance = instance;
-          this.updateLayout();
-        }
+        return computed;
+      }
+
+      _onComputedLayoutMapChanged(map) {
+        this._updateLayout();
       }
 
       _onIronResize(evt) {
         this._resizeDebouncer = Polymer.Debouncer.debounce(this._resizeDebouncer, Polymer.Async.timeOut.after(this.resizeDelay), () => {
-          this.updateLayout();
+          this._updateLayout();
         });
       }
 
-      updateLayout() {
-        if (this._layouterInstance) {
-          this._layouterInstance.layoutContainer(this._getContainer(), this._getContainerWidth(), this._getContainerChildNodes());
+      _updateLayout() {
+        let widthList = Object.keys(this._computedLayoutMap);
+        let containerWidth = this._getContainerWidth();
+        let selected = -1;
+        for (let i = 0; i < widthList.length && containerWidth >= Number.parseInt(widthList[i]); ++i) {
+          selected = Number.parseInt(widthList[i]);
         }
+        let name = selected >= 0 ? this._computedLayoutMap[selected] : null;
+        this._setLayout(name);
       }
 
-      _getParentRoot() {
-        let node = this.parent;
-        while (node.parent) {
-          node = node.parent;
-        }
-        return node;
-      }
-
-      _getContainer() {
-        return this;
-      }
       _getContainerWidth() {
-        return this._getContainer().clientWidth;
-      }
-      _getContainerChildNodes() {
-        return Polymer.FlattenedNodesObserver.getFlattenedNodes(this._getContainer());
+        return this.clientWidth;
       }
 
     }
 
     window.customElements.define(CuriumResponsiveLayout.is, CuriumResponsiveLayout);
-    {
-      window.Curium = window.Curium || {};
-
-      let currentData = null;
-      if (Curium.CuriumResponsiveLayout) currentData = Curium.CuriumResponsiveLayout;
-
-      Curium.CuriumResponsiveLayout = CuriumResponsiveLayout;
-
-      if (currentData) {
-        for (let prop in currentData) {
-          Curium.CuriumResponsiveLayout[prop] = currentData[prop];
-        }
-      }
-    }
+    window.Curium = window.Curium || {};
+    Curium.CuriumResponsiveLayout = CuriumResponsiveLayout;
   </script>
 </dom-module>
