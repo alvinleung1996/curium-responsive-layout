@@ -29,7 +29,7 @@
       static get properties() {
         return {
           layoutMap: {
-            type: Object,
+            type: Object, // or String
             value: () => {}
           },
           _computedLayoutMap: {
@@ -82,13 +82,16 @@
       }
 
       _updateLayout() {
-        let widthList = Object.keys(this._computedLayoutMap);
-        let containerWidth = this._getContainerWidth();
-        let selected = -1;
-        for (let i = 0; i < widthList.length && containerWidth >= Number.parseInt(widthList[i]); ++i) {
-          selected = Number.parseInt(widthList[i]);
+        let name = null;
+        if (this._computedLayoutMap) {
+          let widthList = Object.keys(this._computedLayoutMap);
+          let containerWidth = this._getContainerWidth();
+          let selected = -1;
+          for (let i = 0; i < widthList.length && containerWidth >= Number.parseInt(widthList[i]); ++i) {
+            selected = Number.parseInt(widthList[i]);
+          }
+          if (selected >= 0) name = this._computedLayoutMap[selected];
         }
-        let name = selected >= 0 ? this._computedLayoutMap[selected] : null;
         this._setLayout(name);
       }
 
