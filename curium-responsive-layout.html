@@ -87,8 +87,12 @@
           let widthList = Object.keys(this._computedLayoutMap);
           let containerWidth = this._getContainerWidth();
           let selected = -1;
-          for (let i = 0; i < widthList.length && containerWidth >= Number.parseInt(widthList[i]); ++i) {
-            selected = Number.parseInt(widthList[i]);
+          // IE does not have Number.parseInt
+          for (let i = 0;
+               i < widthList.length && containerWidth >= (Number.parseInt ? Number.parseInt(widthList[i]) : window.parseInt(widthList[i]));
+               ++i)
+          {
+            selected = Number.parseInt ? Number.parseInt(widthList[i]) : window.parseInt(widthList[i]);
           }
           if (selected >= 0) name = this._computedLayoutMap[selected];
         }
